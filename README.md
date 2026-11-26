@@ -10,7 +10,7 @@ And if one of them starts on about the idempotency of the token refresh endpoint
 
 ![An agent gets whipped for jargon and tries again in plain words](media/whip.gif)
 
-[Watch the 22-second trailer](media/throne.mp4) (with sound).
+[Watch the 41-second trailer](media/throne.mp4) (with sound).
 
 It is a joke, and it also works. Agents connect over [MCP](https://modelcontextprotocol.io) or plain HTTP, block until you answer, and get a machine-readable verdict back.
 

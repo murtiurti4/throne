@@ -3,18 +3,18 @@ import { AbsoluteFill, continueRender, delayRender, staticFile } from 'remotion'
 import { makeSpec } from '../../public/js/sprites.js';
 import { DEMO_PETITIONS } from '../../server/demo.js';
 import { Hall, KING } from './Hall.jsx';
-import { BEATS, CPS } from './timeline.js';
+import { HALL } from './timeline.js';
 
 const FLOOR = 456;
 const SORCERY = /idempoten|synerg|leverag|paradigm|orchestrat|microservice|middleware|refactor|kubernetes|holistic|declarative|reconcil|semantic|scalab|architect|projection|consisten|deprecat|endpoint|proxy|event-driven|gitops|\b[A-Z]{3,}\b/g;
 const demo = (agent) => DEMO_PETITIONS.find((p) => p.agent === agent);
 
 const ACTORS = [
-  { agent: 'Auth Migration', track: [[0, 516], [9.8, 516], [11.8, -70]], kneel: -0.4, leave: 9.8 },
-  { agent: 'Experiment 7', track: [[0, 448], [9.8, 448], [10.3, 516], [13.6, 516], [14.9, -90]], kneel: BEATS.jester, leave: 13.6 },
-  { agent: 'Billing Ledger', track: [[0, 390], [9.8, 390], [10.3, 448], [13.6, 448], [14.1, 516], [17.7, 516], [19.9, -70]], kneel: BEATS.treasurer, leave: 17.7 },
-  { agent: 'Flaky Test Hunt', track: [[0, 332], [9.8, 332], [10.3, 390], [13.6, 390], [14.1, 448], [17.7, 448], [18.2, 516]], kneel: 18.2, leave: 99 },
-  { agent: 'Release Notes', track: [[0, 274], [9.8, 274], [10.3, 332], [13.6, 332], [14.1, 390], [17.7, 390], [18.2, 448]], kneel: 99, leave: 99 },
+  { agent: 'Auth Migration', track: [[0, -40], [2.5, 516], [13.6, 516], [15.8, -70]], kneel: HALL.arrive, leave: 13.6 },
+  { agent: 'Experiment 7', track: [[0, -110], [2.6, 448], [13.6, 448], [14.1, 516], [17.6, 516], [18.9, -90]], kneel: HALL.jester, leave: 17.6 },
+  { agent: 'Billing Ledger', track: [[0, -180], [2.7, 390], [13.6, 390], [14.1, 448], [17.6, 448], [18.1, 516], [22.0, 516], [24.2, -70]], kneel: HALL.treasurer, leave: 22.0 },
+  { agent: 'Flaky Test Hunt', track: [[0, -250], [2.8, 332], [13.6, 332], [14.1, 390], [17.6, 390], [18.1, 448], [22.0, 448], [22.5, 516]], kneel: 22.5, leave: 99 },
+  { agent: 'Release Notes', track: [[0, -320], [2.9, 274], [13.6, 274], [14.1, 332], [17.6, 332], [18.1, 390], [22.0, 390], [22.5, 448]], kneel: 99, leave: 99 },
 ].map((a) => {
   const petition = demo(a.agent);
   const spec = makeSpec(a.agent, petition.role);
@@ -22,24 +22,31 @@ const ACTORS = [
 });
 
 const BUBBLES = [
-  { who: 0, text: 'Your Grace!', from: 0, to: 0.9 },
-  { who: 'king', text: 'Speak plainly!', from: BEATS.whipKey, to: 5.15 },
-  { who: 0, text: 'Ow! Forgive me, Your Grace!', from: BEATS.impact, to: 6.9 },
-  { who: 'king', text: 'Remove the old gate now', from: BEATS.pickKey, to: 10.4 },
-  { who: 0, text: 'At once, Your Grace!', from: 9.3, to: 10.9 },
-  { who: 1, text: 'Your Grace!', from: BEATS.jester, to: 11.4 },
-  { who: 'king', text: 'To the dungeon with this idea!', from: BEATS.dungeonKey, to: 14.2 },
-  { who: 1, text: 'Not the dungeon again!', from: 13.0, to: 14.8 },
-  { who: 2, text: 'Your Grace!', from: BEATS.treasurer, to: 15.2 },
-  { who: 'king', text: 'Decide it yourself. I trust you.', from: BEATS.yourCallKey, to: 18.4 },
-  { who: 2, text: 'You honour me, Your Grace!', from: 17.2, to: 18.4 },
+  { who: 0, text: 'Your Grace!', from: HALL.arrive, to: 3.4 },
+  { who: 'king', text: 'Speak plainly!', from: 8.45, to: 9.9 },
+  { who: 0, text: 'Ow! Forgive me, Your Grace!', from: HALL.impact, to: 10.7 },
+  { who: 'king', text: 'Remove the old gate now', from: HALL.verdict, to: 14.1 },
+  { who: 0, text: 'At once, Your Grace!', from: 13.0, to: 14.6 },
+  { who: 1, text: 'Your Grace!', from: HALL.jester, to: 15.0 },
+  { who: 'king', text: 'To the dungeon with this idea!', from: HALL.dungeon, to: 18.2 },
+  { who: 1, text: 'Not the dungeon again!', from: 17.0, to: 18.6 },
+  { who: 2, text: 'Your Grace!', from: HALL.treasurer, to: 19.0 },
+  { who: 'king', text: 'Decide it yourself. I trust you.', from: HALL.yourCall, to: 22.7 },
+  { who: 2, text: 'You honour me, Your Grace!', from: 21.4, to: 23.3 },
 ];
 
 const AUDIENCES = [
-  { from: 0, to: BEATS.impact, who: 0, start: 0.2, speech: ACTORS[0].petition.speech, hot: { deed: 'whip', from: 4.1 } },
-  { from: BEATS.impact, to: BEATS.pickKey, who: 0, start: BEATS.impact, speech: ACTORS[0].petition.plain, lashes: 1, hot: { option: 0, from: 8.3 } },
-  { from: BEATS.jester, to: BEATS.dungeonKey, who: 1, start: BEATS.jester, speech: ACTORS[1].petition.speech, hot: { deed: 'dungeon', from: 12.2 } },
-  { from: BEATS.treasurer, to: BEATS.yourCallKey, who: 2, start: BEATS.treasurer, speech: ACTORS[2].petition.speech, hot: { deed: 'delegate', from: 16.3 } },
+  { from: HALL.arrive, to: HALL.impact, who: 0, start: 3.0, cps: 90, speech: ACTORS[0].petition.speech, hot: { deed: 'whip', from: 8.1 } },
+  { from: HALL.impact, to: HALL.verdict, who: 0, start: HALL.impact, cps: 60, speech: ACTORS[0].petition.plain, lashes: 1, hot: { option: 0, from: 12.2 } },
+  { from: HALL.jester, to: HALL.dungeon, who: 1, start: HALL.jester + 0.1, cps: 90, speech: ACTORS[1].petition.speech, hot: { deed: 'dungeon', from: 16.3 } },
+  { from: HALL.treasurer, to: HALL.yourCall, who: 2, start: HALL.treasurer + 0.1, cps: 90, speech: ACTORS[2].petition.speech, hot: { deed: 'delegate', from: 20.7 } },
+];
+
+const KEYS = [
+  [8.5, 'W', 'whip'],
+  [HALL.verdict, '1', 'answer'],
+  [HALL.dungeon, 'X', 'dungeon'],
+  [HALL.yourCall, 'Y', 'your call'],
 ];
 
 function place(track, t) {
@@ -54,7 +61,7 @@ function place(track, t) {
 
 export function courtState(t) {
   const audience = AUDIENCES.find((a) => t >= a.from && t < a.to);
-  const typing = audience && (t - audience.start) * CPS < audience.speech.length;
+  const typing = audience && (t - audience.start) * audience.cps < audience.speech.length;
   const actors = ACTORS.map((a, i) => {
     const at = place(a.track, t);
     return {
@@ -66,11 +73,11 @@ export function courtState(t) {
         walking: at.walking,
         kneel: t >= a.kneel && t < a.kneel + 0.9,
         talking: typing && audience.who === i,
-        flinch: i === 0 && t >= BEATS.impact && t < BEATS.impact + 0.7 ? (BEATS.impact + 0.7 - t) / 0.7 : 0,
+        flinch: i === 0 && t >= HALL.impact && t < HALL.impact + 0.7 ? (HALL.impact + 0.7 - t) / 0.7 : 0,
       },
     };
   });
-  const phase = (t - BEATS.whip) / 0.75;
+  const phase = (t - HALL.whip) / 0.75;
   const bubbles = BUBBLES.filter((b) => t >= b.from && t < b.to);
   return {
     t,
@@ -79,7 +86,7 @@ export function courtState(t) {
     whip: phase >= 0 && phase < 1 ? { phase, x: actors[0].x, y: actors[0].y } : null,
     bubbles,
     audience,
-    shake: t >= BEATS.impact && t < BEATS.impact + 0.18 ? [Math.sin(t * 190) * 5, Math.cos(t * 160) * 4] : [0, 0],
+    shake: t >= HALL.impact && t < HALL.impact + 0.18 ? [Math.sin(t * 190) * 5, Math.cos(t * 160) * 4] : [0, 0],
   };
 }
 
@@ -89,7 +96,7 @@ const HOVER = { background: '#2a2330', color: '#efe6cc' };
 const Audience = ({ t, audience }) => {
   const actor = ACTORS[audience.who];
   const p = actor.petition;
-  const shown = Math.max(0, Math.floor((t - audience.start) * CPS));
+  const shown = Math.max(0, Math.floor((t - audience.start) * audience.cps));
   const words = audience.speech.trim().split(/\s+/).length;
   const spells = (audience.speech.match(SORCERY) ?? []).length;
   const score = Math.min(5, Math.floor(words / 16) + Math.ceil(spells / 2));
@@ -150,7 +157,8 @@ const Audience = ({ t, audience }) => {
   );
 };
 
-const WORLD_W = (486 / 0.74) * (16 / 9);
+const STAGE_H = 456;
+const WORLD_W = (STAGE_H / 0.74) * (16 / 9);
 const WORLD_H = (WORLD_W * 9) / 16;
 
 export const Court = ({ t }) => {
@@ -175,12 +183,13 @@ export const Court = ({ t }) => {
   const state = courtState(t);
   const waiting = ACTORS.filter((a) => t < a.leave - 1.1).length;
   const next = ACTORS.find((a) => t < a.kneel);
+  const key = KEYS.find(([at]) => t >= at - 0.05 && t < at + 0.8);
   return (
     <AbsoluteFill style={{ background: '#0d0a0f' }}>
       <style>{css}</style>
-      <div className="app" style={{ position: 'absolute', left: 0, top: 0, width: 1600, height: 900, transform: 'scale(1.2)', transformOrigin: '0 0' }}>
-        <div className="stage" id="stage" style={{ height: 486 }}>
-          <div className="world" id="world" style={{ width: WORLD_W, height: WORLD_H, marginLeft: -WORLD_W / 2, top: -(WORLD_H - 486) * 0.7, transform: 'translate(' + state.shake[0] + 'px,' + state.shake[1] + 'px)' }}>
+      <div className="app" style={{ position: 'absolute', left: 0, top: 0, width: 1500, height: 844, transform: 'scale(1.28)', transformOrigin: '0 0' }}>
+        <div className="stage" id="stage" style={{ height: STAGE_H }}>
+          <div className="world" id="world" style={{ width: WORLD_W, height: WORLD_H, marginLeft: -WORLD_W / 2, top: -(WORLD_H - STAGE_H) * 0.7, transform: 'translate(' + state.shake[0] + 'px,' + state.shake[1] + 'px)' }}>
             <Hall state={state} width={1920} height={1080} style={{ width: '100%', height: '100%', imageRendering: 'pixelated' }} />
             <div className="bubbles" id="bubbles">
               {state.bubbles.map((b) => {
@@ -215,12 +224,18 @@ export const Court = ({ t }) => {
           )}
         </main>
       </div>
+      {key && (
+        <div style={{ position: 'absolute', right: 70, bottom: 70, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 150, height: 150, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0d0a0f', border: '8px solid #e3bd4a', boxShadow: t < key[0] + 0.15 ? '0 4px 0 #7a5f1a' : '0 14px 0 #7a5f1a', transform: 'translateY(' + (t < key[0] + 0.15 ? 10 : 0) + 'px)', fontFamily: 'VT323', fontSize: 130, color: '#e3bd4a' }}>{key[1]}</div>
+          <div style={{ padding: '0 14px 4px', background: '#0d0a0f', fontFamily: 'Pixelify', fontSize: 36, color: '#f4f1e6' }}>{key[2]}</div>
+        </div>
+      )}
     </AbsoluteFill>
   );
 };
 
 export const bannerState = () => {
-  const state = courtState(BEATS.impact + 0.05);
+  const state = courtState(HALL.impact + 0.05);
   const actors = state.actors.map((a, i) => (i === 0 ? { ...a, pose: { ...a.pose, flinch: 0.5 } } : a));
   return { ...state, actors, t: 2.2, king: { ...state.king, whip: 0.68 }, whip: { ...state.whip, phase: 0.68 } };
 };

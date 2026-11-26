@@ -174,7 +174,7 @@ export class Scene {
     ctx.fillRect(650, 394, 36, 4);
     ctx.fillStyle = '#5a2020';
     ctx.fillRect(650, 398, 36, 6);
-    drawKing(ctx, KING.x, KING.y, king);
+    drawKing(ctx, KING.x, KING.y, king, this.look);
 
     const order = [...this.actors.values()].sort((a, b) => a.y - b.y);
     for (const a of order) {

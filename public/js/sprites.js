@@ -292,7 +292,7 @@ export function drawChar(ctx, x, y, facing, spec, pose) {
   ctx.restore();
 }
 
-export function drawKing(ctx, x, y, state) {
+export function drawKing(ctx, x, y, state, look) {
   const S = 4;
   const t = state.t;
   ctx.save();
@@ -306,9 +306,11 @@ export function drawKing(ctx, x, y, state) {
   const asleep = state.asleep;
   const head = -26 + breath + (asleep ? 2 : 0);
   const hxo = asleep ? 2 : 0;
-  const blue = '#3b4f86';
-  const red = '#8f2a2a';
-  const gold = '#e3bd4a';
+  const blue = look.robe;
+  const red = look.cape;
+  const gold = look.metal;
+  const skin = look.skin;
+  const hair = look.hair;
   const fur = '#ece6d6';
 
   R(-7, -16 + breath, 4, 17, red);
@@ -328,37 +330,54 @@ export function drawKing(ctx, x, y, state) {
   R(1, -15 + breath, 1, 1, INK);
   R(4, -14 + breath, 1, 1, INK);
 
-  R(-2 + hxo, head, 8, 9, '#e0aa86');
-  R(-3 + hxo, head, 3, 7, '#5a3a22');
-  R(-3 + hxo, head - 1, 8, 2, '#5a3a22');
-  R(0 + hxo, head + 5, 6, 5, '#5a3a22');
-  R(2 + hxo, head + 10, 3, 2, '#5a3a22');
-  R(6 + hxo, head + 4, 1, 2, '#c98f6c');
+  R(-2 + hxo, head, 8, 9, skin);
+  R(-3 + hxo, head, 3, 7, hair);
+  R(-3 + hxo, head - 1, 8, 2, hair);
+  if (look.longHair) R(-4 + hxo, head + 2, 3, 12, hair);
+  if (look.beard) {
+    R(0 + hxo, head + 5, 6, 5, hair);
+    R(2 + hxo, head + 10, 3, 2, hair);
+  }
+  R(6 + hxo, head + 4, 1, 2, shade(skin, 0.9));
   const blink = asleep || Math.floor(t * 10) % 43 === 0;
   R(4 + hxo, head + 3, 1, blink ? 1 : 2, INK);
   if (state.talking && Math.floor(t * 7) % 2) R(4 + hxo, head + 7, 2, 1, '#2a1410');
-  R(-2 + hxo, head - 4, 8, 3, gold);
-  R(-2 + hxo, head - 6, 2, 2, gold);
-  R(1 + hxo, head - 6, 2, 2, gold);
-  R(4 + hxo, head - 6, 2, 2, gold);
-  R(-2 + hxo, head - 2, 8, 1, shade(gold, 0.75));
-  R(1 + hxo, head - 4, 2, 1, '#c23a34');
+  if (look.crown === 'crown') {
+    R(-2 + hxo, head - 4, 8, 3, gold);
+    R(-2 + hxo, head - 6, 2, 2, gold);
+    R(1 + hxo, head - 6, 2, 2, gold);
+    R(4 + hxo, head - 6, 2, 2, gold);
+    R(-2 + hxo, head - 2, 8, 1, shade(gold, 0.75));
+    R(1 + hxo, head - 4, 2, 1, '#c23a34');
+  } else if (look.crown === 'circlet') {
+    R(-3 + hxo, head - 1, 9, 2, gold);
+    R(3 + hxo, head - 3, 2, 2, gold);
+    R(3 + hxo, head - 2, 2, 1, '#c23a34');
+  } else if (look.crown === 'turban') {
+    R(-3 + hxo, head - 4, 10, 5, fur);
+    R(-2 + hxo, head - 7, 8, 3, fur);
+    R(-3 + hxo, head - 2, 10, 1, shade('#ece6d6', 0.82));
+    R(-1 + hxo, head - 6, 6, 1, shade('#ece6d6', 0.82));
+    R(3 + hxo, head - 4, 2, 2, gold);
+    R(3 + hxo, head - 9, 2, 5, red);
+    R(4 + hxo, head - 11, 1, 2, red);
+  }
 
   const w = state.whip;
   if (w !== null && w !== undefined) {
     const up = w < 0.35;
     if (up) {
       R(0, -21, 3, 9, shade(blue, 1.15));
-      R(0, -23, 3, 2, '#e0aa86');
+      R(0, -23, 3, 2, skin);
     } else {
       R(0, -13, 4, 3, shade(blue, 1.15));
       R(3, -12, 7, 3, shade(blue, 1.15));
-      R(10, -12, 2, 3, '#e0aa86');
+      R(10, -12, 2, 3, skin);
     }
   } else {
     R(0, -12 + breath, 3, 6, shade(blue, 1.15));
     R(1, -7, 7, 3, shade(blue, 1.15));
-    R(8, -7, 2, 3, '#e0aa86');
+    R(8, -7, 2, 3, skin);
   }
   if (asleep) {
     const z = Math.floor(t * 1.5) % 3;

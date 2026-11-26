@@ -3,7 +3,10 @@ import { makeSpec } from './sprites.js';
 import * as sfx from './audio.js';
 
 const $ = (id) => document.getElementById(id);
-const pick = (list) => list[Math.floor(Math.random() * list.length)];
+const DEFAULT_KING = { name: '', title: 'King', address: 'Your Grace', skin: '#e0aa86', hair: '#5a3a22', robe: '#3b4f86', cape: '#8f2a2a', metal: '#e3bd4a', crown: 'crown', beard: true, longHair: false };
+let king = DEFAULT_KING;
+const c = (line) => line.replace(/Your Grace|\bsire\b|my King|King/g, (m) => (m === 'Your Grace' ? king.address : m === 'King' ? king.title : 'my ' + king.title));
+const pick = (list) => c(list[Math.floor(Math.random() * list.length)]);
 
 const query = new URLSearchParams(location.search);
 if (query.get('token')) localStorage.setItem('throne.token', query.get('token'));
@@ -32,7 +35,7 @@ const displayName = (p) => {
   const spec = makeSpec(p.agent, p.role);
   return { name: spec.title + ' ' + p.agent, station: spec.station };
 };
-const courtly = (speech) => (COURTESY.test(speech) ? speech : 'Your Grace, ' + speech);
+const courtly = (speech) => (COURTESY.test(speech) || speech.toLowerCase().includes(king.address.toLowerCase()) ? speech : king.address + ', ' + speech);
 const current = () => state.queue.find((p) => p.id === scene.present && p.status === 'waiting') ?? null;
 
 async function deed(id, action, body) {
@@ -82,7 +85,7 @@ function render() {
   const p = current();
   const waiting = state.queue.filter((q) => q.status === 'waiting').length;
   const thinking = state.queue.length - waiting;
-  $('count').textContent = waiting ? waiting + (waiting === 1 ? ' subject awaits' : ' subjects await') + ' your judgment' : 'The court is quiet';
+  $('count').textContent = waiting ? waiting + (waiting === 1 ? ' subject awaits' : ' subjects await') + ' your judgment' : king.name ? 'The court of ' + king.title + ' ' + king.name : 'The court is quiet';
   document.title = (waiting ? '(' + waiting + ') ' : '') + 'Throne';
   $('audience').hidden = !p;
   $('idle').hidden = !!p;
@@ -91,7 +94,7 @@ function render() {
     clearInterval(typing);
     scene.speaking = false;
     const next = state.queue.find((q) => q.status === 'waiting');
-    $('idle-text').textContent = next ? displayName(next).name + ' approaches the throne…' : thinking ? 'Your subjects are searching for simpler words, Your Grace.' : 'No one awaits your judgment, Your Grace.';
+    $('idle-text').textContent = next ? displayName(next).name + ' approaches the throne…' : c(thinking ? 'Your subjects are searching for simpler words, Your Grace.' : 'No one awaits your judgment, Your Grace.');
     $('demo').hidden = state.queue.length > 0;
     $('idle-hint').replaceChildren(...(next || thinking ? [] : ['Point your agents at ', Object.assign(document.createElement('code'), { textContent: location.origin + '/mcp' }), ' and they will come before you here.']));
     return;
@@ -130,7 +133,7 @@ function render() {
   if (fresh) {
     $('words').value = '';
     sfx.fanfare();
-    scene.say(p.id, p.lashes ? 'Your Grace... if I may try again.' : 'Your Grace!', 1.6);
+    scene.say(p.id, c(p.lashes ? 'Your Grace... if I may try again.' : 'Your Grace!'), 1.6);
   }
 }
 
@@ -208,6 +211,25 @@ function renderLedger() {
   $('ledger-list').replaceChildren(...(items.length ? items : [Object.assign(document.createElement('li'), { className: 'empty', textContent: 'No decrees have been recorded yet.' })]));
 }
 
+function setKing(next) {
+  king = next;
+  scene.look = next;
+  $('words').placeholder = c('Or speak your own decree, Your Grace… (press / to write)');
+  for (const el of document.querySelectorAll('[data-king]')) {
+    if (el === document.activeElement) continue;
+    if (el.type === 'checkbox') el.checked = next[el.dataset.king];
+    else el.value = next[el.dataset.king];
+  }
+}
+
+let kingTimer;
+function crown(next) {
+  setKing(next);
+  render();
+  clearTimeout(kingTimer);
+  kingTimer = setTimeout(() => fetch(withToken('/api/king'), { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(next) }), 300);
+}
+
 function apply(next) {
   const hold = scene.whipBusyFor();
   if (hold > 0) return setTimeout(() => apply(next), hold * 1000 + 30);
@@ -216,6 +238,7 @@ function apply(next) {
     if (p.status === 'withdrawn' && state.queue.some((q) => q.id === p.id)) scene.say(p.id, pick(FAREWELL.withdrawn), 2);
   }
   state = next;
+  if (!kingTimer || !$('wardrobe').contains(document.activeElement)) setKing(next.king);
   scene.sync(state.queue);
   render();
   if (!$('ledger').hidden) renderLedger();
@@ -244,6 +267,7 @@ const hall = new Image();
 hall.src = '/assets/hall.png';
 await Promise.all([hall.decode(), document.fonts.ready]);
 scene = new Scene($('canvas'), $('bubbles'), hall);
+scene.look = king;
 scene.onPresent = render;
 scene.onImpact = (id) => {
   sfx.crack();
@@ -272,7 +296,30 @@ $('ledger-open').onclick = () => {
   $('ledger').hidden = false;
 };
 $('ledger-close').onclick = () => ($('ledger').hidden = true);
-const paintSound = () => ($('sound').textContent = 'Sound: ' + (sfx.isMuted() ? 'off' : 'on'));
+$('chambers-open').onclick = () => ($('chambers').hidden = !$('chambers').hidden);
+$('chambers-close').onclick = () => ($('chambers').hidden = true);
+$('wardrobe').onsubmit = (event) => event.preventDefault();
+$('wardrobe').oninput = (event) => {
+  if (!event.target.dataset.king) return;
+  const next = { ...king };
+  for (const el of document.querySelectorAll('[data-king]')) next[el.dataset.king] = el.type === 'checkbox' ? el.checked : el.value.trim();
+  next.title ||= DEFAULT_KING.title;
+  next.address ||= DEFAULT_KING.address;
+  crown(next);
+};
+$('king-reset').onclick = () => crown(DEFAULT_KING);
+$('volume').value = sfx.musicVolume() * 100;
+$('volume').oninput = () => sfx.setMusicVolume($('volume').value / 100);
+const toggleMusic = () => {
+  sfx.setMusic(!sfx.musicOn());
+  paintSound();
+};
+$('music').onclick = toggleMusic;
+for (const gesture of ['pointerdown', 'keydown']) window.addEventListener(gesture, sfx.wakeMusic, { once: true });
+const paintSound = () => {
+  $('sound').textContent = 'Sound: ' + (sfx.isMuted() ? 'off' : 'on');
+  $('music').textContent = 'Music: ' + (sfx.musicOn() ? 'on' : 'off');
+};
 $('sound').onclick = () => {
   sfx.setMuted(!sfx.isMuted());
   paintSound();
@@ -282,14 +329,16 @@ paintSound();
 window.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     $('ledger').hidden = true;
+    $('chambers').hidden = true;
     return document.activeElement.blur();
   }
-  if (event.target === $('words') || event.metaKey || event.ctrlKey || event.altKey) return;
+  if (event.target.matches('input, select, textarea') || event.metaKey || event.ctrlKey || event.altKey) return;
   const key = event.key.toLowerCase();
   if (key === '/' || key === 't') {
     event.preventDefault();
     return $('words').focus();
   }
+  if (key === 'm') return toggleMusic();
   const p = current();
   if (!p) return;
   if (/^[1-6]$/.test(key) && p.options[key - 1]) return rule(key - 1);

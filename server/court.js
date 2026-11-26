@@ -5,11 +5,15 @@ import { dirname } from 'node:path';
 export const ROLES = ['knight', 'scribe', 'treasurer', 'spy', 'mason', 'jester', 'herald', 'alchemist', 'peasant', 'monk'];
 export const ACTIVE = new Set(['waiting', 'rephrasing']);
 
-const WHIP_COMMANDS = [
-  'The King has whipped you for speaking in riddles. Ask again in plain words: one or two short sentences, no jargon, no acronyms, and options a tired monarch can choose between at a glance.',
-  'A second lash. Twenty words at most, Your Grace has decreed. Say what you need decided and nothing else.',
-  'The whip cracks a third time. Ten words. One question. Options of three words or fewer.',
-];
+export const CROWNS = ['crown', 'circlet', 'turban', 'none'];
+export const DEFAULT_KING = { name: '', title: 'King', address: 'Your Grace', skin: '#e0aa86', hair: '#5a3a22', robe: '#3b4f86', cape: '#8f2a2a', metal: '#e3bd4a', crown: 'crown', beard: true, longHair: false };
+
+const whipCommand = (king, lashes) =>
+  [
+    'The ' + king.title + ' has whipped you for speaking in riddles. Ask again in plain words: one or two short sentences, no jargon, no acronyms, and options a tired monarch can choose between at a glance.',
+    'A second lash. Twenty words at most, the ' + king.title + ' has decreed. Say what you need decided and nothing else.',
+    'The whip cracks a third time. Ten words. One question. Options of three words or fewer.',
+  ][Math.min(lashes, 3) - 1];
 
 export class CourtError extends Error {
   constructor(status, message) {
@@ -48,9 +52,11 @@ export class Court {
     this.listeners = new Set();
     this.waiters = new Map();
     this.seq = 0;
+    this.king = { ...DEFAULT_KING };
     if (file && existsSync(file)) {
       const saved = JSON.parse(readFileSync(file, 'utf8'));
       this.seq = saved.seq ?? 0;
+      this.king = { ...DEFAULT_KING, ...saved.king };
       for (const p of saved.petitions ?? []) this.petitions.set(p.id, p);
     }
   }
@@ -79,6 +85,31 @@ export class Court {
     this.petitions.set(p.id, p);
     this.changed(p);
     return p;
+  }
+
+  crown(input) {
+    if (!input || typeof input !== 'object') throw new CourtError(400, 'the monarch must be a JSON object');
+    const king = { ...this.king };
+    if (input.name !== undefined) king.name = text(input.name, 'name', 40) ?? '';
+    if (input.title !== undefined) king.title = text(input.title, 'title', 30, true);
+    if (input.address !== undefined) king.address = text(input.address, 'address', 30, true);
+    for (const key of ['skin', 'hair', 'robe', 'cape', 'metal']) {
+      if (input[key] === undefined) continue;
+      if (typeof input[key] !== 'string' || !/^#[0-9a-f]{6}$/i.test(input[key])) throw new CourtError(400, key + ' must be a colour like #3b4f86');
+      king[key] = input[key].toLowerCase();
+    }
+    if (input.crown !== undefined) {
+      if (!CROWNS.includes(input.crown)) throw new CourtError(400, 'crown must be one of ' + CROWNS.join(', '));
+      king.crown = input.crown;
+    }
+    for (const key of ['beard', 'longHair']) {
+      if (input[key] === undefined) continue;
+      if (typeof input[key] !== 'boolean') throw new CourtError(400, key + ' must be true or false');
+      king[key] = input[key];
+    }
+    this.king = king;
+    this.changed();
+    return king;
   }
 
   get(id) {
@@ -165,19 +196,19 @@ export class Court {
 
   outcome(p) {
     const base = { petition_id: p.id, status: p.status, lashes: p.lashes };
-    if (p.status === 'waiting') return { ...base, status: 'pending', decree: 'The King has not yet heard you. Wait your turn and ask for the verdict again.' };
+    if (p.status === 'waiting') return { ...base, status: 'pending', decree: 'The ' + this.king.title + ' has not yet heard you. Wait your turn and ask for the verdict again.' };
     if (p.status === 'rephrasing') {
-      return { ...base, status: 'whipped', decree: WHIP_COMMANDS[Math.min(p.lashes, WHIP_COMMANDS.length) - 1], next: 'Call rephrase with a plainer speech (and plainer options), then await the verdict again.' };
+      return { ...base, status: 'whipped', decree: whipCommand(this.king, p.lashes), next: 'Call rephrase with a plainer speech (and plainer options), then await the verdict again.' };
     }
     if (p.status === 'answered') {
       const parts = [];
-      if (p.verdict.choice) parts.push('The King chose: "' + p.verdict.choice.label + '".');
-      if (p.verdict.message) parts.push('The King said: "' + p.verdict.message + '"');
+      if (p.verdict.choice) parts.push('The ' + this.king.title + ' chose: "' + p.verdict.choice.label + '".');
+      if (p.verdict.message) parts.push('The ' + this.king.title + ' said: "' + p.verdict.message + '"');
       return { ...base, choice: p.verdict.choice, message: p.verdict.message, decree: parts.join(' ') };
     }
-    if (p.status === 'delegated') return { ...base, decree: 'The King trusts your judgment. Decide this yourself, choose the option you would recommend, and do not ask again.' };
+    if (p.status === 'delegated') return { ...base, decree: 'The ' + this.king.title + ' trusts your judgment. Decide this yourself, choose the option you would recommend, and do not ask again.' };
     if (p.status === 'dungeon') {
-      return { ...base, message: p.verdict.message, decree: 'To the dungeon with this idea. Abandon the thing you asked about and do not proceed with any of its options.' + (p.verdict.message ? ' The King said: "' + p.verdict.message + '"' : '') };
+      return { ...base, message: p.verdict.message, decree: 'To the dungeon with this idea. Abandon the thing you asked about and do not proceed with any of its options.' + (p.verdict.message ? ' The ' + this.king.title + ' said: "' + p.verdict.message + '"' : '') };
     }
     return { ...base, decree: 'The petition was withdrawn.' };
   }
@@ -201,6 +232,7 @@ export class Court {
   snapshot() {
     const all = [...this.petitions.values()];
     return {
+      king: this.king,
       queue: all.filter((p) => ACTIVE.has(p.status)).sort((a, b) => a.order - b.order),
       ledger: all.filter((p) => !ACTIVE.has(p.status)).sort((a, b) => b.settled_at.localeCompare(a.settled_at)).slice(0, 60),
     };
@@ -212,12 +244,12 @@ export class Court {
   }
 
   changed(p) {
-    if (p.status !== 'waiting') for (const done of [...(this.waiters.get(p.id) ?? [])]) done();
+    if (p && p.status !== 'waiting') for (const done of [...(this.waiters.get(p.id) ?? [])]) done();
     if (this.file) {
       const settled = [...this.petitions.values()].filter((q) => !ACTIVE.has(q.status)).sort((a, b) => b.settled_at.localeCompare(a.settled_at));
       for (const old of settled.slice(200)) this.petitions.delete(old.id);
       mkdirSync(dirname(this.file), { recursive: true });
-      writeFileSync(this.file + '.tmp', JSON.stringify({ seq: this.seq, petitions: [...this.petitions.values()] }));
+      writeFileSync(this.file + '.tmp', JSON.stringify({ seq: this.seq, king: this.king, petitions: [...this.petitions.values()] }));
       renameSync(this.file + '.tmp', this.file);
     }
     for (const listener of this.listeners) listener(p);

@@ -15,7 +15,7 @@ const court = new Court({ file: process.env.THRONE_DATA ?? join(root, 'data', 'c
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.woff2': 'font/woff2', '.md': 'text/markdown; charset=utf-8', '.svg': 'image/svg+xml' };
 
 court.subscribe((p) => {
-  if (p.status !== 'rephrasing' || !p.demo_terse) return;
+  if (p?.status !== 'rephrasing' || !p.demo_terse) return;
   setTimeout(() => {
     if (court.petitions.get(p.id)?.status === 'rephrasing') court.rephrase(p.id, { speech: p.demo_terse });
   }, 3500);
@@ -60,7 +60,15 @@ async function api(req, res, url) {
     return;
   }
   if (resource === 'state' && method === 'GET') return send(res, 200, court.snapshot());
-  if (resource === 'demo' && method === 'POST') return send(res, 201, DEMO_PETITIONS.map((p) => court.petition(p).id));
+  if (resource === 'king') {
+    if (method === 'GET') return send(res, 200, court.king);
+    if (method === 'PUT') return send(res, 200, court.crown(await readJson(req)));
+    throw new CourtError(405, 'GET or PUT the monarch');
+  }
+  if (resource === 'demo' && method === 'POST') {
+    const address = (line) => line.replaceAll('Your Grace', court.king.address);
+    return send(res, 201, DEMO_PETITIONS.map((p) => court.petition({ ...p, speech: address(p.speech), plain: address(p.plain), demo_terse: address(p.demo_terse) }).id));
+  }
 
   if (resource !== 'petitions') throw new CourtError(404, 'no such chamber in this castle');
   if (!id) {

@@ -410,7 +410,7 @@ button:disabled {
   font: inherit;
 }
 
-#ledger {
+.sheet {
   position: fixed;
   inset: 0 0 0 auto;
   width: min(520px, 100%);
@@ -421,41 +421,110 @@ button:disabled {
   overflow-y: auto;
   z-index: 5;
 }
-#ledger header {
+.sheet header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 2px solid #b9a27a;
   padding-bottom: 8px;
 }
-#ledger h1 {
+.sheet h1 {
   font-size: 24px;
 }
-#ledger button {
+.sheet button {
   background: none;
   border: 2px solid #8a7450;
   cursor: pointer;
   padding: 0 10px 2px;
 }
-#ledger ol {
+.sheet ol {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-#ledger li {
+.sheet li {
   padding: 10px 0;
   border-bottom: 2px dotted #b9a27a;
 }
-#ledger .when {
+.sheet .when {
   color: #7a6a4c;
   font-size: 18px;
 }
-#ledger .ruling {
+.sheet .ruling {
   color: #7a1f1a;
 }
-#ledger .empty {
+.sheet .empty {
   color: #7a6a4c;
   border: 0;
+}
+
+#chambers {
+  inset: 0 auto 0 0;
+  width: min(400px, 100%);
+  border-left: 0;
+  border-right: 4px solid #000;
+}
+#wardrobe {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#wardrobe h2 {
+  margin-top: 12px;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #7a6a4c;
+}
+#wardrobe label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#wardrobe input[type='text'],
+#wardrobe select {
+  padding: 4px 8px 6px;
+  background: #f6efd9;
+  border: 2px solid #8a7450;
+  color: #2a2016;
+  font: inherit;
+  outline: none;
+}
+#wardrobe input[type='text']:focus,
+#wardrobe select:focus {
+  border-color: #7a1f1a;
+}
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+#wardrobe .swatches label {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+#wardrobe input[type='color'] {
+  width: 34px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid #8a7450;
+  background: none;
+  cursor: pointer;
+}
+#wardrobe input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: #7a1f1a;
+}
+#wardrobe input[type='range'] {
+  accent-color: #7a1f1a;
+}
+#king-reset {
+  align-self: flex-start;
+  margin-top: 12px;
+  padding: 2px 12px 4px;
 }
 
 @media (max-width: 720px) {

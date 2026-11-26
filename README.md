@@ -32,6 +32,12 @@ Open the page and press **Summon test subjects** to try it with five sample peti
 
 The windiness meter under each speech counts words and jargon ("words of sorcery"), and the whip starts to itch when it gets bad.
 
+## The Royal Chambers
+
+**Chambers** opens a panel to rename and restyle the monarch: name, title (King, Queen, Sultan, anything), how subjects address you, robe, cape, hair, skin, headwear and beard. The title and form of address are saved on the server, so agents are told to use them and decrees read "The Queen chose…". `GET` or `PUT /api/king` does the same from a script.
+
+A court tune loops in the background. **Music** (or `M`) mutes it separately from the sound effects, and the volume slider is in the Chambers. Browsers only allow audio after the first click or key press.
+
 ## Sending agents to court
 
 ### MCP

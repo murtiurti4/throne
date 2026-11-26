@@ -73,6 +73,18 @@ test('petitions are validated', () => {
   assert.equal(court.petition({ agent: 'a', speech: 'x', role: 'wizard' }).role, undefined);
 });
 
+test('the monarch can be renamed and restyled, and agents hear the new title', async () => {
+  const court = new Court();
+  court.crown({ name: 'Ada', title: 'Queen', address: 'Your Majesty', robe: '#112233', crown: 'circlet', beard: false });
+  assert.deepEqual([court.snapshot().king.title, court.king.robe, court.king.beard, court.king.cape], ['Queen', '#112233', false, '#8f2a2a']);
+  assert.match(court.outcome(court.rule(ask(court).id, { option: 0 })).decree, /The Queen chose: "Yes"/);
+  const list = await handleMcp(court, { jsonrpc: '2.0', id: 1, method: 'tools/list' });
+  assert.match(list.result.tools[0].description, /your Queen, Ada. Address the Queen as "Your Majesty"/);
+  assert.throws(() => court.crown({ robe: 'red' }), /robe must be a colour/);
+  assert.throws(() => court.crown({ crown: 'fez' }), /crown must be one of/);
+  assert.throws(() => court.crown({ title: '' }), /title is required/);
+});
+
 test('the MCP endpoint lists tools and carries a petition through to its verdict', async () => {
   const court = new Court();
   const init = await handleMcp(court, { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18' } });

@@ -1,5 +1,5 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { HALL, PINGS, T, TYPING } from '../src/timeline.js';
+import { BEATS, T, TYPING } from '../src/timeline.js';
 
 const SR = 44100;
 const music = new Float32Array(SR * T.end);
@@ -60,7 +60,7 @@ const MELODY = [
   [[74, 3]],
 ];
 
-for (let bar = 0, t = T.hall; t < T.end - 0.5; bar++, t += BEAT * 3) {
+for (let bar = 0, t = 0.05; t < T.end - 0.5; bar++, t += BEAT * 3) {
   const i = bar % 16;
   const [root, fifth, third] = CHORDS[i];
   pluck(root - 12, t, 2.4, 0.16);
@@ -74,26 +74,24 @@ for (let bar = 0, t = T.hall; t < T.end - 0.5; bar++, t += BEAT * 3) {
   }
 }
 
-PINGS.forEach((t, i) => {
-  tone(sfx, 1175 + (i % 3) * 60, t, 0.16, 'sine', 0.1);
-  tone(sfx, 1568 + (i % 3) * 60, t + 0.07, 0.22, 'sine', 0.1);
-});
-drum(sfx, T.kneel, 0.7, 70, 34, 0.9);
-[392, 523, 659, 784].forEach((f, i) => tone(sfx, f, T.title + 0.1 + i * 0.13, i === 3 ? 0.7 : 0.2, 'square', 0.06));
+const fanfare = (t, vol) => [392, 523, 659].forEach((f, i) => tone(sfx, f, t + i * 0.11, 0.16, 'square', vol));
+fanfare(BEATS.jester, 0.03);
+fanfare(BEATS.treasurer, 0.03);
+[392, 523, 659, 784].forEach((f, i) => tone(sfx, f, T.card + 0.1 + i * 0.13, i === 3 ? 0.7 : 0.2, 'square', 0.05));
 let last = 0;
-add(sfx, T.hall + HALL.impact, 0.22, (s, u) => {
+add(sfx, BEATS.impact, 0.22, (s, u) => {
   const noise = rand() * 2 - 1;
   const high = noise - last;
   last = noise;
   return high * 0.45 * Math.pow(1 - u, 6);
 });
-tone(sfx, 900, T.hall + HALL.impact + 0.02, 0.08, 'square', 0.03);
-for (const t of [HALL.verdict, HALL.yourCall]) {
-  tone(sfx, 110, T.hall + t, 0.12, 'triangle', 0.3);
-  tone(sfx, 70, T.hall + t + 0.02, 0.18, 'sine', 0.3);
+tone(sfx, 900, BEATS.impact + 0.02, 0.08, 'square', 0.03);
+for (const t of [BEATS.pickKey, BEATS.yourCallKey]) {
+  tone(sfx, 110, t, 0.12, 'triangle', 0.3);
+  tone(sfx, 70, t + 0.02, 0.18, 'sine', 0.3);
 }
-[196, 156, 110].forEach((f, i) => tone(sfx, f, T.hall + HALL.dungeon + i * 0.16, 0.24, 'sawtooth', 0.06));
-for (const [from, to] of TYPING) for (let t = from; t < to; t += 0.09) tone(sfx, 520 + rand() * 60, T.hall + t, 0.03, 'square', 0.012);
+[196, 156, 110].forEach((f, i) => tone(sfx, f, BEATS.dungeonKey + i * 0.16, 0.24, 'sawtooth', 0.06));
+for (const [from, to] of TYPING) for (let t = from; t < to; t += 0.05) tone(sfx, 520 + rand() * 60, t, 0.03, 'square', 0.012);
 
 const pcm = Buffer.alloc(44 + music.length * 2);
 pcm.write('RIFF', 0);

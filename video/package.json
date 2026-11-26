@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prep": "mkdir -p public && cp ../public/assets/hall.png ../public/fonts/*.woff2 public/ && node scripts/soundtrack.mjs",
+    "prep": "mkdir -p public && cp ../public/assets/hall.png ../public/style.css ../public/fonts/*.woff2 public/ && node scripts/soundtrack.mjs",
     "studio": "npm run prep && remotion studio src/index.jsx",
     "render": "npm run prep && remotion render src/index.jsx Promo ../media/throne.mp4",
     "banner": "npm run prep && remotion still src/index.jsx Banner ../media/banner.png"

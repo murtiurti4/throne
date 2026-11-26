@@ -1,46 +1,45 @@
-import React from 'react';
-import { AbsoluteFill } from 'remotion';
+import React, { useEffect, useState } from 'react';
+import { AbsoluteFill, continueRender, delayRender, staticFile } from 'remotion';
 import { makeSpec } from '../../public/js/sprites.js';
-import { Bubble, Hall, KING } from './Hall.jsx';
-import { HALL } from './timeline.js';
+import { DEMO_PETITIONS } from '../../server/demo.js';
+import { Hall, KING } from './Hall.jsx';
+import { BEATS, CPS } from './timeline.js';
 
-const OFFSET = 56;
 const FLOOR = 456;
 const SORCERY = /idempoten|synerg|leverag|paradigm|orchestrat|microservice|middleware|refactor|kubernetes|holistic|declarative|reconcil|semantic|scalab|architect|projection|consisten|deprecat|endpoint|proxy|event-driven|gitops|\b[A-Z]{3,}\b/g;
+const demo = (agent) => DEMO_PETITIONS.find((p) => p.agent === agent);
 
 const ACTORS = [
-  { agent: 'Auth Migration', role: 'knight', track: [[0, -40], [2.5, 516], [13.4, 516], [15.6, -70]], kneel: 2.5, leave: 13.4 },
-  { agent: 'Experiment 7', role: 'jester', track: [[0, -110], [2.6, 448], [13.4, 448], [13.9, 516], [17.2, 516], [18.7, -90]], kneel: 13.9, leave: 17.2 },
-  { agent: 'Billing Ledger', role: 'treasurer', track: [[0, -180], [2.7, 390], [13.4, 390], [13.9, 448], [17.2, 448], [17.7, 516], [20.8, 516], [23.2, -70]], kneel: 17.7, leave: 20.8 },
-  { agent: 'Flaky Test Hunt', role: 'spy', track: [[0, -250], [2.8, 332], [13.4, 332], [13.9, 390], [17.2, 390], [17.7, 448], [20.8, 448], [21.3, 516]], kneel: 21.3, leave: 99 },
-  { agent: 'Release Notes', role: 'herald', track: [[0, -320], [2.9, 274], [13.4, 274], [13.9, 332], [17.2, 332], [17.7, 390], [20.8, 390], [21.3, 448]], kneel: 99, leave: 99 },
-].map((a) => ({ ...a, spec: makeSpec(a.agent, a.role) }));
+  { agent: 'Auth Migration', track: [[0, 516], [9.8, 516], [11.8, -70]], kneel: -0.4, leave: 9.8 },
+  { agent: 'Experiment 7', track: [[0, 448], [9.8, 448], [10.3, 516], [13.6, 516], [14.9, -90]], kneel: BEATS.jester, leave: 13.6 },
+  { agent: 'Billing Ledger', track: [[0, 390], [9.8, 390], [10.3, 448], [13.6, 448], [14.1, 516], [17.7, 516], [19.9, -70]], kneel: BEATS.treasurer, leave: 17.7 },
+  { agent: 'Flaky Test Hunt', track: [[0, 332], [9.8, 332], [10.3, 390], [13.6, 390], [14.1, 448], [17.7, 448], [18.2, 516]], kneel: 18.2, leave: 99 },
+  { agent: 'Release Notes', track: [[0, 274], [9.8, 274], [10.3, 332], [13.6, 332], [14.1, 390], [17.7, 390], [18.2, 448]], kneel: 99, leave: 99 },
+].map((a) => {
+  const petition = demo(a.agent);
+  const spec = makeSpec(a.agent, petition.role);
+  return { ...a, petition, spec, name: spec.title + ' ' + a.agent };
+});
 
 const BUBBLES = [
-  { who: 0, text: 'Your Grace!', from: 2.6, to: 3.5 },
-  { who: 'king', text: '...', from: 6.6, to: 8.2 },
-  { who: 'king', text: 'Speak plainly!', from: 8.35, to: 9.9 },
-  { who: 0, text: 'Ow! Forgive me, Your Grace!', from: HALL.impact, to: 10.7 },
-  { who: 'king', text: 'Delete it now.', from: HALL.verdict, to: 14.1 },
-  { who: 0, text: 'At once, Your Grace!', from: 13.0, to: 14.7 },
-  { who: 'king', text: 'To the dungeon with this idea!', from: HALL.dungeon, to: 18.2 },
-  { who: 1, text: 'Not the dungeon again!', from: 17.0, to: 18.6 },
-  { who: 'king', text: 'Decide it yourself. I trust you.', from: HALL.yourCall, to: 21.7 },
-  { who: 2, text: 'You honour me, Your Grace!', from: 20.4, to: 22.3 },
+  { who: 0, text: 'Your Grace!', from: 0, to: 0.9 },
+  { who: 'king', text: 'Speak plainly!', from: BEATS.whipKey, to: 5.15 },
+  { who: 0, text: 'Ow! Forgive me, Your Grace!', from: BEATS.impact, to: 6.9 },
+  { who: 'king', text: 'Remove the old gate now', from: BEATS.pickKey, to: 10.4 },
+  { who: 0, text: 'At once, Your Grace!', from: 9.3, to: 10.9 },
+  { who: 1, text: 'Your Grace!', from: BEATS.jester, to: 11.4 },
+  { who: 'king', text: 'To the dungeon with this idea!', from: BEATS.dungeonKey, to: 14.2 },
+  { who: 1, text: 'Not the dungeon again!', from: 13.0, to: 14.8 },
+  { who: 2, text: 'Your Grace!', from: BEATS.treasurer, to: 15.2 },
+  { who: 'king', text: 'Decide it yourself. I trust you.', from: BEATS.yourCallKey, to: 18.4 },
+  { who: 2, text: 'You honour me, Your Grace!', from: 17.2, to: 18.4 },
 ];
 
-const PANELS = [
-  {
-    from: 3.6,
-    to: 10.2,
-    who: 0,
-    cps: 62,
-    speech: 'Your Grace, upon refactoring the authentication middleware I discovered that the idempotency of the token refresh endpoint cannot be guaranteed while the legacy session-cookie flow coexists behind the same reverse-proxy route, and I humbly seek your leave on the deprecation strategy.',
-    deed: ['Whip', 8.45],
-  },
-  { from: 10.2, to: 13.7, who: 0, cps: 40, lashes: 1, speech: 'Your Grace, two logins. May I delete the old one?', options: ['Delete it now', 'Keep both for 30 days', 'Keep both forever'], optionsAt: 11.7, chosen: [0, HALL.verdict] },
-  { from: 14.2, to: 17.5, who: 1, cps: 46, speech: 'Your Grace! I rewrote the Save button as five microservices. May I ship it?', options: ['Ship it, fool', 'Keep the old button', 'Show me a demo first'], optionsAt: 15.8, deed: ['Dungeon', HALL.dungeon] },
-  { from: 18.0, to: 21.1, who: 2, cps: 58, speech: 'Your Grace, shall I spend $40 a month so tests take 6 minutes instead of 19?', options: ['Spend the gold', 'Not a single coin', 'Try it for one month'], optionsAt: 19.4, deed: ['Your call', HALL.yourCall] },
+const AUDIENCES = [
+  { from: 0, to: BEATS.impact, who: 0, start: 0.2, speech: ACTORS[0].petition.speech, hot: { deed: 'whip', from: 4.1 } },
+  { from: BEATS.impact, to: BEATS.pickKey, who: 0, start: BEATS.impact, speech: ACTORS[0].petition.plain, lashes: 1, hot: { option: 0, from: 8.3 } },
+  { from: BEATS.jester, to: BEATS.dungeonKey, who: 1, start: BEATS.jester, speech: ACTORS[1].petition.speech, hot: { deed: 'dungeon', from: 12.2 } },
+  { from: BEATS.treasurer, to: BEATS.yourCallKey, who: 2, start: BEATS.treasurer, speech: ACTORS[2].petition.speech, hot: { deed: 'delegate', from: 16.3 } },
 ];
 
 function place(track, t) {
@@ -54,8 +53,8 @@ function place(track, t) {
 }
 
 export function courtState(t) {
-  const panel = PANELS.find((p) => t >= p.from && t < p.to);
-  const typing = panel && (t - panel.from) * panel.cps < panel.speech.length;
+  const audience = AUDIENCES.find((a) => t >= a.from && t < a.to);
+  const typing = audience && (t - audience.start) * CPS < audience.speech.length;
   const actors = ACTORS.map((a, i) => {
     const at = place(a.track, t);
     return {
@@ -66,12 +65,12 @@ export function courtState(t) {
       pose: {
         walking: at.walking,
         kneel: t >= a.kneel && t < a.kneel + 0.9,
-        talking: typing && panel.who === i,
-        flinch: i === 0 && t >= HALL.impact && t < HALL.impact + 0.7 ? (HALL.impact + 0.7 - t) / 0.7 : 0,
+        talking: typing && audience.who === i,
+        flinch: i === 0 && t >= BEATS.impact && t < BEATS.impact + 0.7 ? (BEATS.impact + 0.7 - t) / 0.7 : 0,
       },
     };
   });
-  const phase = (t - HALL.whip) / 0.75;
+  const phase = (t - BEATS.whip) / 0.75;
   const bubbles = BUBBLES.filter((b) => t >= b.from && t < b.to);
   return {
     t,
@@ -79,99 +78,149 @@ export function courtState(t) {
     king: { whip: phase >= 0 && phase < 1 ? phase : null, talking: bubbles.some((b) => b.who === 'king'), asleep: false },
     whip: phase >= 0 && phase < 1 ? { phase, x: actors[0].x, y: actors[0].y } : null,
     bubbles,
-    panel,
-    shake: t >= HALL.impact && t < HALL.impact + 0.2 ? [Math.sin(t * 190) * 10, Math.cos(t * 160) * 8] : [0, 0],
+    audience,
+    shake: t >= BEATS.impact && t < BEATS.impact + 0.18 ? [Math.sin(t * 190) * 5, Math.cos(t * 160) * 4] : [0, 0],
   };
 }
 
-const kbd = { display: 'inline-block', minWidth: 34, padding: '0 8px 2px', background: '#0d0a0f', border: '3px solid #4a4052', color: '#e3bd4a', fontFamily: 'VT323', fontSize: 28, textAlign: 'center' };
+const DEEDS = [['whip', 'W', 'Whip'], ['delegate', 'Y', 'Your call'], ['back', 'B', 'Later'], ['dungeon', 'X', 'Dungeon']];
+const HOVER = { background: '#2a2330', color: '#efe6cc' };
 
-const Panel = ({ t, panel }) => {
-  const base = { position: 'absolute', left: 0, right: 0, bottom: 0, height: 250, background: 'linear-gradient(#1b1620, #120f16)', borderTop: '6px solid #000', fontFamily: 'VT323', color: '#efe6cc', padding: '14px 70px' };
-  if (!panel) {
-    const next = ACTORS.find((a) => t < a.kneel);
-    return (
-      <div style={{ ...base, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 50 }}>
-        {t < 2.5 ? '5 subjects await your judgment, Your Grace.' : next ? next.spec.title + ' ' + next.agent + ' approaches the throne…' : ''}
-      </div>
-    );
-  }
-  const actor = ACTORS[panel.who];
-  const shown = panel.speech.slice(0, Math.floor((t - panel.from) * panel.cps));
-  const words = shown.trim() ? shown.trim().split(/\s+/).length : 0;
-  const spells = (shown.match(SORCERY) ?? []).length;
+const Audience = ({ t, audience }) => {
+  const actor = ACTORS[audience.who];
+  const p = actor.petition;
+  const shown = Math.max(0, Math.floor((t - audience.start) * CPS));
+  const words = audience.speech.trim().split(/\s+/).length;
+  const spells = (audience.speech.match(SORCERY) ?? []).length;
   const score = Math.min(5, Math.floor(words / 16) + Math.ceil(spells / 2));
-  const verdict = ['Plainly spoken', 'Plainly spoken', 'A little wordy', 'Long-winded', 'A windbag', 'Insufferable'][score];
-  const pressed = panel.deed && t >= panel.deed[1] ? panel.deed[0] : null;
-  const itching = score >= 4 && !pressed && Math.floor(t * 4) % 2 === 0;
+  const hot = audience.hot && t >= audience.hot.from ? audience.hot : {};
+  const itch = score >= 4 && Math.floor(t / 0.45) % 2 === 1;
   return (
-    <div style={base}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 22 }}>
-          <span style={{ fontFamily: 'Pixelify', fontWeight: 600, fontSize: 40, color: '#e3bd4a' }}>{actor.spec.title + ' ' + actor.agent}</span>
-          <span style={{ fontSize: 32, color: '#a89c8a' }}>{actor.spec.station}</span>
-          <span style={{ fontSize: 34, color: '#b23a34', letterSpacing: 4 }}>{'/'.repeat(panel.lashes ?? 0)}</span>
+    <section id="audience">
+      <header>
+        <div className="who">
+          <h1 id="who">{actor.name}</h1>
+          <span id="station">{actor.spec.station}</span>
+          <span id="realm">{p.realm}</span>
+          <span id="lashes">{'/'.repeat(audience.lashes ?? 0)}</span>
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
-          {[['W', 'Whip'], ['Y', 'Your call'], ['B', 'Later'], ['X', 'Dungeon']].map(([key, name]) => {
-            const on = pressed === name;
-            const red = name === 'Whip';
-            return (
-              <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 16px 6px 6px', border: '3px solid ' + (on ? '#fff3c4' : red ? (itching ? '#ff6a60' : '#7a2a26') : '#4a4052'), background: on ? '#e3bd4a' : red && itching ? '#3a1616' : 'transparent', color: on ? '#20160a' : red ? '#e0605a' : '#a89c8a', fontFamily: 'Pixelify', fontSize: 26, transform: on ? 'scale(1.12)' : 'none' }}>
-                <span style={kbd}>{key}</span>
-                {name}
-              </div>
-            );
-          })}
+        <div className="deeds">
+          {DEEDS.map(([id, key, label]) => (
+            <button key={id} id={id} type="button" style={hot.deed === id ? HOVER : id === 'whip' && itch ? { borderColor: '#ff6a60', background: '#3a1616' } : undefined}>
+              <kbd>{key}</kbd>
+              {label}
+            </button>
+          ))}
         </div>
-      </div>
-      <div style={{ display: 'flex', gap: 40, marginTop: 8 }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 38, lineHeight: 1.05, minHeight: 80 }}>{shown}</div>
-          <div style={{ fontSize: 28, color: '#a89c8a', marginTop: 4 }}>
-            <span style={{ color: '#e3bd4a', letterSpacing: 2 }}>{'▮'.repeat(score) + '▯'.repeat(5 - score)}</span>
-            {' ' + verdict + ' · ' + words + ' words'}
-            {spells > 0 && <span style={{ color: '#e0605a' }}>{' · ' + spells + ' words of sorcery'}</span>}
-          </div>
-        </div>
-        {panel.options && t >= panel.optionsAt && (
-          <div style={{ width: 520, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {panel.options.map((label, i) => {
-              const on = panel.chosen && panel.chosen[0] === i && t >= panel.chosen[1];
-              return (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '3px 14px 5px', background: on ? '#e3bd4a' : '#2a2330', border: '3px solid ' + (on ? '#fff3c4' : '#4a4052'), color: on ? '#20160a' : '#efe6cc', fontSize: 32, lineHeight: 1 }}>
-                  <span style={kbd}>{i + 1}</span>
-                  {label}
-                </div>
-              );
-            })}
-          </div>
+      </header>
+      <h2 id="title">{p.title}</h2>
+      <p id="speech">
+        {audience.speech.slice(0, shown)}
+        <span className="ghost">{audience.speech.slice(shown)}</span>
+      </p>
+      <div className="windbag" id="windbag">
+        <span className="meter">{'▮'.repeat(score) + '▯'.repeat(5 - score)}</span>
+        {' ' + ['Plainly spoken', 'Plainly spoken', 'A little wordy', 'Long-winded', 'A windbag', 'Insufferable'][score] + ' · ' + words + ' words'}
+        {spells > 0 && (
+          <>
+            {' · '}
+            <b>{spells + (spells === 1 ? ' word' : ' words') + ' of sorcery'}</b>
+          </>
         )}
       </div>
-    </div>
+      {p.context && (
+        <details id="scroll">
+          <summary>Unroll the scroll</summary>
+        </details>
+      )}
+      <div id="options">
+        {p.options.map((option, i) => (
+          <button key={option.label} type="button" className="option" style={hot.option === i ? { borderColor: '#e3bd4a', background: '#352c3c' } : undefined}>
+            <kbd>{i + 1}</kbd>
+            <span>{option.label}</span>
+            {option.detail && <small>{option.detail}</small>}
+          </button>
+        ))}
+      </div>
+      <form id="decree">
+        <input id="words" type="text" readOnly placeholder="Or speak your own decree, Your Grace… (press / to write)" />
+        <button type="button">Decree</button>
+      </form>
+    </section>
   );
 };
 
+const WORLD_W = (486 / 0.74) * (16 / 9);
+const WORLD_H = (WORLD_W * 9) / 16;
+
 export const Court = ({ t }) => {
-  const state = courtState(t);
-  return (
-    <AbsoluteFill style={{ background: '#0d0a0f', transform: 'translate(' + state.shake[0] + 'px,' + state.shake[1] + 'px)' }}>
-      <Hall state={state} width={1920} height={1080} offsetY={OFFSET} />
-      {state.bubbles.map((b) => {
-        const a = b.who === 'king' ? null : state.actors[b.who];
-        return (
-          <Bubble key={b.text} royal={!a} x={(a ? a.x : KING.x - 14) * 2} y={((a ? a.y - 132 : KING.y - 144) - OFFSET) * 2}>
-            {b.text}
-          </Bubble>
+  const [css, setCss] = useState(null);
+  const [handle] = useState(() => delayRender('stylesheet'));
+  useEffect(() => {
+    fetch(staticFile('style.css'))
+      .then((res) => res.text())
+      .then((text) => {
+        setCss(
+          text
+            .replace(/html,\s*body \{/, '.app {')
+            .replace(/\nbody \{/, '\n.app {')
+            .replaceAll('/assets/hall.png', staticFile('hall.png'))
+            .replaceAll('/fonts/pixelify.woff2', staticFile('pixelify.woff2'))
+            .replaceAll('/fonts/vt323.woff2', staticFile('vt323.woff2')) + '\n.app * { animation: none !important; }',
         );
-      })}
-      <Panel t={t} panel={state.panel} />
+        continueRender(handle);
+      });
+  }, [handle]);
+  if (!css) return null;
+  const state = courtState(t);
+  const waiting = ACTORS.filter((a) => t < a.leave - 1.1).length;
+  const next = ACTORS.find((a) => t < a.kneel);
+  return (
+    <AbsoluteFill style={{ background: '#0d0a0f' }}>
+      <style>{css}</style>
+      <div className="app" style={{ position: 'absolute', left: 0, top: 0, width: 1600, height: 900, transform: 'scale(1.2)', transformOrigin: '0 0' }}>
+        <div className="stage" id="stage" style={{ height: 486 }}>
+          <div className="world" id="world" style={{ width: WORLD_W, height: WORLD_H, marginLeft: -WORLD_W / 2, top: -(WORLD_H - 486) * 0.7, transform: 'translate(' + state.shake[0] + 'px,' + state.shake[1] + 'px)' }}>
+            <Hall state={state} width={1920} height={1080} style={{ width: '100%', height: '100%', imageRendering: 'pixelated' }} />
+            <div className="bubbles" id="bubbles">
+              {state.bubbles.map((b) => {
+                const a = b.who === 'king' ? null : state.actors[b.who];
+                return (
+                  <div key={b.text + b.from} className={a ? 'bubble' : 'bubble royal'} style={{ left: ((a ? a.x : KING.x - 14) / 960) * 100 + '%', top: ((a ? a.y - 132 : KING.y - 144) / 540) * 100 + '%' }}>
+                    {b.text}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="hud">
+            <div className="plaque" id="count">
+              {waiting + ' subjects await your judgment'}
+            </div>
+            <div className="hud-buttons">
+              <button type="button">Chambers</button>
+              <button type="button">Ledger</button>
+              <button type="button">Music: on</button>
+              <button type="button">Sound: on</button>
+            </div>
+          </div>
+        </div>
+        <main className="panel">
+          {state.audience ? (
+            <Audience t={t} audience={state.audience} />
+          ) : (
+            <section id="idle">
+              <p id="idle-text">{next ? next.name + ' approaches the throne…' : ''}</p>
+            </section>
+          )}
+        </main>
+      </div>
     </AbsoluteFill>
   );
 };
 
 export const bannerState = () => {
-  const state = courtState(HALL.impact + 0.05);
+  const state = courtState(BEATS.impact + 0.05);
   const actors = state.actors.map((a, i) => (i === 0 ? { ...a, pose: { ...a.pose, flinch: 0.5 } } : a));
   return { ...state, actors, t: 2.2, king: { ...state.king, whip: 0.68 }, whip: { ...state.whip, phase: 0.68 } };
 };

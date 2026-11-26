@@ -248,7 +248,7 @@ export class Scene {
   }
 }
 
-function findFlames(image) {
+export function findFlames(image) {
   const c = document.createElement('canvas');
   c.width = image.width;
   c.height = image.height;
